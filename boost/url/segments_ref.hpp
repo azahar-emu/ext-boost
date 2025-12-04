@@ -151,16 +151,16 @@ public:
         Calls to allocate may throw.
 
         @param other The segments to assign.
+        @return A reference to this object.
     */
-    /** @{ */
     BOOST_URL_DECL
     segments_ref&
     operator=(segments_ref const& other);
 
+    /// @copydoc segments_ref::operator=(segments_ref const&)
     BOOST_URL_DECL
     segments_ref&
     operator=(segments_view const& other);
-    /** @} */
 
     /** Assignment
 
@@ -199,16 +199,19 @@ public:
         Calls to allocate may throw.
 
         @param init The list of segments to assign.
+        @return A reference to this object.
     */
     BOOST_URL_DECL
     segments_ref&
     operator=(std::initializer_list<
-        string_view> init);
+        core::string_view> init);
 
     /** Conversion
 
         @see
             @ref segments_view.
+
+        @return A view of the segments.
     */
     BOOST_URL_DECL
     operator
@@ -234,6 +237,8 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return A reference to the url.
     */
     url_base&
     url() const noexcept
@@ -307,7 +312,7 @@ public:
     BOOST_URL_DECL
     void
     assign(std::initializer_list<
-        string_view> init);
+        core::string_view> init);
 
     /** Assign segments
 
@@ -327,7 +332,7 @@ public:
 
         @par Mandates
         @code
-        std::is_convertible< std::iterator_traits< FwdIt >::reference_type, string_view >::value == true
+        std::is_convertible< std::iterator_traits< FwdIt >::reference_type, core::string_view >::value == true
         @endcode
 
         @par Complexity
@@ -337,8 +342,8 @@ public:
         Strong guarantee.
         Calls to allocate may throw.
 
-        @param first, last The range of segments
-        to assign.
+        @param first The beginning of the range of segments to assign.
+        @param last The end of the range of segments to assign.
     */
     template<class FwdIt>
     void
@@ -377,7 +382,7 @@ public:
     iterator
     insert(
         iterator before,
-        string_view s);
+        core::string_view s);
 
     /** Insert segments
 
@@ -425,7 +430,7 @@ public:
     iterator
     insert(
         iterator before,
-        std::initializer_list<string_view> init);
+        std::initializer_list<core::string_view> init);
 
     /** Insert segments
 
@@ -446,7 +451,7 @@ public:
 
         @par Mandates
         @code
-        std::is_convertible< std::iterator_traits< FwdIt >::reference_type, string_view >::value == true
+        std::is_convertible< std::iterator_traits< FwdIt >::reference_type, core::string_view >::value == true
         @endcode
 
         @par Complexity
@@ -464,8 +469,8 @@ public:
         the range is inserted. This may
         be equal to `end()`.
 
-        @param first, last The range of segments
-        to insert.
+        @param first The beginning of the range of segments to insert.
+        @param last The end of the range of segments to insert.
     */
     template<class FwdIt>
     iterator
@@ -516,8 +521,8 @@ public:
         @return An iterator to one past
         the removed range.
 
-        @param first, last The range of
-        segments to erase.
+        @param first The beginning of the range to remove.
+        @param last The end of the range to remove.
     */
     BOOST_URL_DECL
     iterator
@@ -555,7 +560,7 @@ public:
     iterator
     replace(
         iterator pos,
-        string_view s);
+        core::string_view s);
 
     /** Replace segments
 
@@ -577,7 +582,8 @@ public:
 
         @return An iterator to the new segment.
 
-        @param from, to The range of segments to replace.
+        @param from The beginning of the range of segments to replace.
+        @param to The end of the range of segments to replace.
 
         @param s The string to assign.
     */
@@ -586,7 +592,7 @@ public:
     replace(
         iterator from,
         iterator to,
-        string_view s);
+        core::string_view s);
 
     /** Replace segments
 
@@ -617,7 +623,8 @@ public:
         segment inserted, or one past `to` if
         `init.size() == 0`.
 
-        @param from, to The range of segments to replace.
+        @param from The beginning of the range of segments to replace.
+        @param to The end of the range of segments to replace.
 
         @param init The list of segments to assign.
     */
@@ -627,7 +634,7 @@ public:
         iterator from,
         iterator to,
         std::initializer_list<
-            string_view> init);
+            core::string_view> init);
 
     /** Replace segments
 
@@ -657,9 +664,10 @@ public:
         segment inserted, or one past `to` if
         `init.size() == 0`.
 
-        @param from, to The range of segments to replace.
-
-        @param first, last The range of segments to assign.
+        @param from The beginning of the range of segments to replace.
+        @param to The end of the range of segments to replace.
+        @param first The beginning of the range of segments to assign.
+        @param last The end of the range of segments to assign.
     */
     template<class FwdIt>
     iterator
@@ -692,7 +700,7 @@ public:
     */
     void
     push_back(
-        string_view s);
+        core::string_view s);
 
     /** Remove the last segment
 

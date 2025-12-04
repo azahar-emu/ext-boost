@@ -1,5 +1,6 @@
 bcp ^
     boost/asio.hpp ^
+    boost/circular_buffer.hpp ^
     boost/container/flat_map.hpp ^
     boost/container/flat_set.hpp ^
     boost/container/small_vector.hpp ^
@@ -15,7 +16,7 @@ bcp ^
     boost/system/error_code.hpp ^
     boost/system/system_error.hpp ^
     boost/stacktrace.hpp ^
-    boost/variant/ ^
+    boost/variant.hpp ^
     boost/archive/binary_iarchive.hpp ^
     boost/archive/binary_oarchive.hpp ^
     boost/serialization/array.hpp ^

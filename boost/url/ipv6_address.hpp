@@ -14,7 +14,7 @@
 #include <boost/url/detail/config.hpp>
 #include <boost/url/error.hpp>
 #include <boost/url/error_types.hpp>
-#include <boost/url/string_view.hpp>
+#include <boost/core/detail/string_view.hpp>
 #include <boost/url/grammar/string_token.hpp>
 #include <array>
 #include <cstdint>
@@ -23,9 +23,7 @@
 namespace boost {
 namespace urls {
 
-#ifndef BOOST_URL_DOCS
 class ipv4_address;
-#endif
 
 /** An IP version 6 style address.
 
@@ -108,6 +106,8 @@ public:
         ipv6_address const&) = default;
 
     /** Copy Assignment
+
+        @return `*this`
     */
     ipv6_address&
     operator=(
@@ -168,9 +168,11 @@ public:
     */
     BOOST_URL_DECL
     ipv6_address(
-        string_view s);
+        core::string_view s);
 
     /** Return the address as bytes, in network byte order
+
+        @return The address as an array of bytes.
     */
     bytes_type
     to_bytes() const noexcept
@@ -242,7 +244,7 @@ public:
         @param dest_size The size of the output buffer.
     */
     BOOST_URL_DECL
-    string_view
+    core::string_view
     to_buffer(
         char* dest,
         std::size_t dest_size) const;
@@ -252,6 +254,8 @@ public:
         The address 0:0:0:0:0:0:0:0 is called the
         unspecified address. It indicates the
         absence of an address.
+
+        @return `true` if the address is unspecified
 
         @par Specification
         @li <a href="https://datatracker.ietf.org/doc/html/rfc4291#section-2.5.2">
@@ -267,6 +271,8 @@ public:
         the loopback address. It may be used by a node
         to send an IPv6 packet to itself.
 
+        @return `true` if the address is a loopback address
+
         @par Specification
         @li <a href="https://datatracker.ietf.org/doc/html/rfc4291#section-2.5.3">
             2.5.3. The Loopback Address (rfc4291)</a>
@@ -280,6 +286,8 @@ public:
         This address type is used to represent the
         addresses of IPv4 nodes as IPv6 addresses.
 
+        @return `true` if the address is a mapped IPv4 address
+
         @par Specification
         @li <a href="https://datatracker.ietf.org/doc/html/rfc4291#section-2.5.5.2">
             2.5.5.2. IPv4-Mapped IPv6 Address (rfc4291)</a>
@@ -289,6 +297,10 @@ public:
     is_v4_mapped() const noexcept;
 
     /** Return true if two addresses are equal
+
+        @param a1 The first address to compare.
+        @param a2 The second address to compare.
+        @return `true` if the addresses are equal
     */
     friend
     bool
@@ -300,6 +312,10 @@ public:
     }
 
     /** Return true if two addresses are not equal
+
+        @param a1 The first address to compare.
+        @param a2 The second address to compare.
+        @return `true` if the addresses are not equal
     */
     friend
     bool
@@ -319,13 +335,26 @@ public:
         @par Specification
         @li <a href="https://datatracker.ietf.org/doc/html/rfc4291#section-2.5.3">
             2.5.3. The Loopback Address (rfc4291)</a>
+
+        @return The loopback address.
     */
     BOOST_URL_DECL
     static
     ipv6_address
     loopback() noexcept;
 
-    // hidden friend
+    /** Format the address to an output stream
+
+        This hidden friend function writes the
+        address to an output stream using
+        standard notation.
+
+        @return The output stream, for chaining.
+
+        @param os The output stream to write to.
+
+        @param addr The address to write.
+    */
     friend
     std::ostream&
     operator<<(
@@ -388,9 +417,9 @@ operator<<(
     @param s The string to parse.
 */
 BOOST_URL_DECL
-result<ipv6_address>
+system::result<ipv6_address>
 parse_ipv6_address(
-    string_view s) noexcept;
+    core::string_view s) noexcept;
 
 } // urls
 } // boost

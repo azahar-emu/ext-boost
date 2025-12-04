@@ -37,8 +37,8 @@ struct BOOST_SYMBOL_VISIBLE
 protected:
     any_params_iter(
         bool empty_,
-        string_view s0_ = {},
-        string_view s1_ = {}) noexcept
+        core::string_view s0_ = {},
+        core::string_view s1_ = {}) noexcept
         : s0(s0_)
         , s1(s1_)
         , empty(empty_)
@@ -48,8 +48,8 @@ protected:
 public:
     // these are adjusted
     // when self-intersecting
-    string_view s0;
-    string_view s1;
+    core::string_view s0;
+    core::string_view s1;
 
     // True if the sequence is empty
     bool empty = false;
@@ -63,8 +63,7 @@ public:
     void
     rewind() noexcept = 0;
 
-    // Measure and increment current element
-    // element.
+    // Measure and increment current element.
     // Returns false on end of range.
     // n is increased by encoded size.
     // Can throw on bad percent-escape
@@ -84,24 +83,24 @@ public:
 
 //------------------------------------------------
 //
-// query_iter
+// query_string_iter
 //
 //------------------------------------------------
 
 // A string of plain query params
 struct BOOST_SYMBOL_VISIBLE
-    query_iter
+    query_string_iter
     : any_params_iter
 {
     // ne = never empty
     BOOST_URL_DECL
     explicit
-    query_iter(
-        string_view s,
+    query_string_iter(
+        core::string_view s,
         bool ne = false) noexcept;
 
 private:
-    string_view s_;
+    core::string_view s_;
     std::size_t n_;
     char const* p_;
     bool at_end_;
@@ -121,17 +120,18 @@ private:
 // A 1-param range allowing
 // self-intersection
 struct BOOST_SYMBOL_VISIBLE
-    param_iter
+    single_param_iter
     : any_params_iter
 {
-    BOOST_URL_DECL
     explicit
-    param_iter(
-        param_view const&) noexcept;
+    single_param_iter(
+        param_view const&,
+        bool space_as_plus) noexcept;
 
 private:
     bool has_value_;
     bool at_end_ = false;
+    bool space_as_plus_ = false;
 
     void rewind() noexcept override;
     bool measure(std::size_t&) noexcept override;
@@ -146,10 +146,15 @@ private:
 
 struct params_iter_base
 {
+    bool space_as_plus_ = true;
 protected:
+    explicit params_iter_base(
+        bool space_as_plus) noexcept
+        : space_as_plus_(space_as_plus)
+        {}
+
     // return encoded size
     BOOST_URL_DECL
-    static
     void
     measure_impl(
         std::size_t& n,
@@ -157,7 +162,6 @@ protected:
 
     // encode to dest
     BOOST_URL_DECL
-    static
     void
     copy_impl(
         char*& dest,
@@ -181,9 +185,11 @@ struct params_iter
 
     params_iter(
         FwdIt first,
-        FwdIt last) noexcept
+        FwdIt last,
+        bool space_as_plus) noexcept
         : any_params_iter(
             first == last)
+        , params_iter_base(space_as_plus)
         , it0_(first)
         , it_(first)
         , end_(last)
@@ -234,7 +240,6 @@ struct BOOST_SYMBOL_VISIBLE
     param_encoded_iter
     : any_params_iter
 {
-    BOOST_URL_DECL
     explicit
     param_encoded_iter(
         param_pct_view const&) noexcept;
@@ -348,7 +353,7 @@ struct param_value_iter
 {
     param_value_iter(
         std::size_t nk,
-        string_view const& value,
+        core::string_view const& value,
         bool has_value) noexcept
         : any_params_iter(
             false,
@@ -406,10 +411,10 @@ private:
 template<class FwdIt>
 params_iter<FwdIt>
 make_params_iter(
-    FwdIt first, FwdIt last)
+    FwdIt first, FwdIt last, bool space_as_plus)
 {
     return params_iter<
-        FwdIt>(first, last);
+        FwdIt>(first, last, space_as_plus);
 }
 
 template<class FwdIt>

@@ -77,7 +77,7 @@ class params_view;
         elements and all elements
         after (including `end()`).
 */
-class params_ref
+class BOOST_URL_DECL params_ref
     : public params_base
 {
     friend class url_base;
@@ -180,8 +180,8 @@ public:
         Calls to allocate may throw.
 
         @param other The params to assign.
+        @return `*this`
     */
-    BOOST_URL_DECL
     params_ref&
     operator=(
         params_ref const& other);
@@ -211,6 +211,7 @@ public:
         Calls to allocate may throw.
 
         @param init The list of params to assign.
+        @return `*this`
     */
     params_ref&
     operator=(
@@ -218,8 +219,9 @@ public:
             param_view> init);
 
     /** Conversion
+
+        @return A view of the query parameters.
     */
-    BOOST_URL_DECL
     operator
     params_view() const noexcept;
 
@@ -245,6 +247,8 @@ public:
         @code
         Throws nothing.
         @endcode
+
+        @return A reference to the url.
     */
     url_base&
     url() const noexcept
@@ -314,7 +318,6 @@ public:
 
         @param init The list of params to assign.
     */
-    BOOST_URL_DECL
     void
     assign(
         std::initializer_list<
@@ -346,8 +349,8 @@ public:
         Strong guarantee.
         Calls to allocate may throw.
 
-        @param first, last The range of params
-        to assign.
+        @param first The first element to assign.
+        @param last One past the last element to assign.
     */
     template<class FwdIt>
     void
@@ -440,10 +443,9 @@ public:
         Strong guarantee.
         Calls to allocate may throw.
 
+        @param first The first element to append.
+        @param last One past the last element to append.
         @return An iterator to the first new element.
-
-        @param first, last The range of params
-        to append.
     */
     template<class FwdIt>
     iterator
@@ -477,7 +479,6 @@ public:
 
         @param p The param to insert.
     */
-    BOOST_URL_DECL
     iterator
     insert(
         iterator before,
@@ -515,7 +516,6 @@ public:
 
         @param init The list of params to insert.
     */
-    BOOST_URL_DECL
     iterator
     insert(
         iterator before,
@@ -555,9 +555,9 @@ public:
         @param before An iterator before which
         the element is inserted. This may
         be equal to `end()`.
-
-        @param first, last The range of params
-        to insert.
+        @param first The first element to insert.
+        @param last One past the last element to insert.
+        @return An iterator to the first element inserted, or `before` if `first == last`.
     */
     template<class FwdIt>
     iterator
@@ -615,11 +615,9 @@ public:
         @par Exception Safety
         Throws nothing.
 
-        @return An iterator to one past
-        the removed range.
-
-        @param first, last The range of
-        elements to erase.
+        @param first The first element to remove.
+        @param last One past the last element to remove.
+        @return An iterator to one past the removed range.
     */
     iterator
     erase(
@@ -654,10 +652,9 @@ public:
         here, the comparison is
         case-insensitive.
     */
-    BOOST_URL_DECL
     std::size_t
     erase(
-        string_view key,
+        core::string_view key,
         ignore_case_param ic = {}) noexcept;
 
     //--------------------------------------------
@@ -694,7 +691,6 @@ public:
 
         @param p The param to assign.
     */
-    BOOST_URL_DECL
     iterator
     replace(
         iterator pos,
@@ -731,7 +727,6 @@ public:
 
         @param init The list of params to assign.
     */
-    BOOST_URL_DECL
     iterator
     replace(
         iterator from,
@@ -769,11 +764,11 @@ public:
         element inserted, or one past `to` if
         `first == last`.
 
-        @param from,to The range of elements to
-        replace.
-
-        @param first, last The range of params
-        to assign.
+        @param from The first element to replace.
+        @param to One past the last element to replace.
+        @param first The first element to insert.
+        @param last One past the last element to insert.
+        @return An iterator to the first element inserted, or one past `to` if `first == last`.
     */
     template<class FwdIt>
     iterator
@@ -815,7 +810,6 @@ public:
 
         @param pos An iterator to the element.
     */
-    BOOST_URL_DECL
     iterator
     unset(
         iterator pos) noexcept;
@@ -854,11 +848,10 @@ public:
         That is, `has_value` for the element
         is true.
     */
-    BOOST_URL_DECL
     iterator
     set(
         iterator pos,
-        string_view value);
+        core::string_view value);
 
     /** Set a value
 
@@ -917,30 +910,15 @@ public:
         here, the comparison is
         case-insensitive.
     */
-    BOOST_URL_DECL
     iterator
     set(
-        string_view key,
-        string_view value,
+        core::string_view key,
+        core::string_view value,
         ignore_case_param ic = {});
 
     //--------------------------------------------
 
 private:
-    BOOST_URL_DECL
-    detail::params_iter_impl
-    find_impl(
-        detail::params_iter_impl,
-        string_view,
-        ignore_case_param) const noexcept;
-
-    BOOST_URL_DECL
-    detail::params_iter_impl
-    find_last_impl(
-        detail::params_iter_impl,
-        string_view,
-        ignore_case_param) const noexcept;
-
     template<class FwdIt>
     void
     assign(FwdIt first, FwdIt last,

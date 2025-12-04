@@ -166,35 +166,6 @@ insert(
             FwdIt>::iterator_category{});
 }
 
-inline
-auto
-params_ref::
-erase(
-    iterator pos) noexcept ->
-    iterator
-{
-    return erase(
-        pos,
-        std::next(pos));
-}
-
-inline
-auto
-params_ref::
-erase(
-    iterator first,
-    iterator last) noexcept ->
-        iterator
-{
-    string_view s("", 0);
-    return iterator(
-        u_->edit_params(
-            first.it_,
-            last.it_,
-            detail::query_iter(s)),
-        opt_);
-}
-
 template<class FwdIt>
 auto
 params_ref::
@@ -221,7 +192,7 @@ replace(
         u_->edit_params(
             from.it_, to.it_,
             detail::make_params_iter(
-                first, last)),
+                first, last, opt_.space_as_plus)),
         opt_);
 }
 
@@ -241,7 +212,7 @@ assign(FwdIt first, FwdIt last,
         begin().it_,
         end().it_,
         detail::make_params_iter(
-            first, last));
+            first, last, opt_.space_as_plus));
 }
 
 template<class FwdIt>
@@ -259,7 +230,7 @@ insert(
             before.it_,
             before.it_,
             detail::make_params_iter(
-                first, last)),
+                first, last, opt_.space_as_plus)),
         opt_);
 }
 

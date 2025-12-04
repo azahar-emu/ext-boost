@@ -52,7 +52,7 @@ struct is_pred<T, void_t<
     @code
     constexpr lut_chars vowel_chars = "AEIOU" "aeiou";
 
-    result< string_view > rv = parse( "Aiea", token_rule( vowel_chars ) );
+    system::result< core::string_view > rv = parse( "Aiea", token_rule( vowel_chars ) );
     @endcode
 
     @see
@@ -116,8 +116,8 @@ class lut_chars
         unsigned char ch) noexcept
     {
         return ch == 255
-            ? construct(ch, pred(ch))
-            : construct(ch, pred(ch)) +
+            ? construct(ch, pred(static_cast<char>(ch)))
+            : construct(ch, pred(static_cast<char>(ch))) +
                 construct(pred, ch + 1);
     }
 
@@ -252,11 +252,20 @@ public:
         Throws nothing.
 
         @param ch The character to test.
+        @return `true` if `ch` is in the set.
     */
     constexpr
     bool
     operator()(
         unsigned char ch) const noexcept
+    {
+        return operator()(static_cast<char>(ch));
+    }
+
+    /// @copydoc operator()(unsigned char) const
+    constexpr
+    bool
+    operator()(char ch) const noexcept
     {
         return mask_[lo(ch)] & hi(ch);
     }

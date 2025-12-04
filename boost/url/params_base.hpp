@@ -22,11 +22,20 @@
 namespace boost {
 namespace urls {
 
-/** Common functionality for containers
+#ifdef BOOST_MSVC
+#   pragma warning(push)
+    // "struct 'boost::urls::encoding_opts' needs to have dll-interface to be used by clients of class 'boost::urls::params_base'"
+    // but encoding_opts should not be BOOST_URL_DECL and params_base should be BOOST_URL_DECL.
+#   pragma warning(disable: 4251)
+#endif
 
-    This base class is used by the library
+/** Common functionality for query parameter containers
+
+    The library uses this base class
     to provide common member functions for
-    containers. This cannot be instantiated
+    containers of query parameters.
+
+    This class should not be instantiated
     directly; Instead, use one of the
     containers or functions:
 
@@ -36,7 +45,7 @@ namespace urls {
     @li @ref params_encoded_ref
     @li @ref params_encoded_view
 */
-class params_base
+class BOOST_URL_DECL params_base
 {
     friend class url_view_base;
     friend class params_ref;
@@ -46,7 +55,6 @@ class params_base
     encoding_opts opt_;
 
     params_base() noexcept;
-    BOOST_URL_DECL
     params_base(
         detail::query_ref const& ref,
         encoding_opts opt) noexcept;
@@ -86,11 +94,7 @@ public:
         iterators with static storage
         duration or as long-lived objects.
     */
-#ifdef BOOST_URL_DOCS
-    using iterator = __see_below__;
-#else
     class iterator;
-#endif
 
     /// @copydoc iterator
     using const_iterator = iterator;
@@ -146,6 +150,8 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return The maximum number of characters possible.
     */
     static
     constexpr
@@ -172,8 +178,9 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return The buffer.
     */
-    BOOST_URL_DECL
     pct_string_view
     buffer() const noexcept;
 
@@ -189,8 +196,9 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return `true` if there are no params.
     */
-    BOOST_URL_DECL
     bool
     empty() const noexcept;
 
@@ -206,8 +214,9 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return The number of params.
     */
-    BOOST_URL_DECL
     std::size_t
     size() const noexcept;
 
@@ -218,8 +227,9 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return An iterator to the beginning.
     */
-    BOOST_URL_DECL
     iterator
     begin() const noexcept;
 
@@ -230,8 +240,9 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return An iterator to the end.
     */
-    BOOST_URL_DECL
     iterator
     end() const noexcept;
 
@@ -264,10 +275,12 @@ public:
         the value @ref ignore_case is passed
         here, the comparison is
         case-insensitive.
+
+        @return `true` if a matching key exists.
     */
     bool
     contains(
-        string_view key,
+        core::string_view key,
         ignore_case_param ic = {}) const noexcept;
 
     /** Return the number of matching keys
@@ -298,11 +311,12 @@ public:
         the value @ref ignore_case is passed
         here, the comparison is
         case-insensitive.
+
+        @return The number of matching keys.
     */
-    BOOST_URL_DECL
     std::size_t
     count(
-        string_view key,
+        core::string_view key,
         ignore_case_param ic = {}) const noexcept;
 
     /** Find a matching key
@@ -347,7 +361,7 @@ public:
     */
     iterator
     find(
-        string_view key,
+        core::string_view key,
         ignore_case_param ic = {}) const noexcept;
 
     /** Find a matching key
@@ -393,7 +407,7 @@ public:
     iterator
     find(
         iterator from,
-        string_view key,
+        core::string_view key,
         ignore_case_param ic = {}) const noexcept;
 
     /** Find a matching key
@@ -433,7 +447,7 @@ public:
     */
     iterator
     find_last(
-        string_view key,
+        core::string_view key,
         ignore_case_param ic = {}) const noexcept;
 
     /** Find a matching key
@@ -480,22 +494,20 @@ public:
     iterator
     find_last(
         iterator before,
-        string_view key,
+        core::string_view key,
         ignore_case_param ic = {}) const noexcept;
 
 private:
-    BOOST_URL_DECL
     detail::params_iter_impl
     find_impl(
         detail::params_iter_impl,
-        string_view,
+        core::string_view,
         ignore_case_param) const noexcept;
 
-    BOOST_URL_DECL
     detail::params_iter_impl
     find_last_impl(
         detail::params_iter_impl,
-        string_view,
+        core::string_view,
         ignore_case_param) const noexcept;
 };
 
@@ -513,6 +525,10 @@ private:
     @code
     return os << ps.buffer();
     @endcode
+
+    @param os The output stream to write to
+    @param qp The parameters to write
+    @return A reference to the output stream, for chaining
 */
 BOOST_URL_DECL
 std::ostream&
@@ -524,5 +540,9 @@ operator<<(
 } // boost
 
 #include <boost/url/impl/params_base.hpp>
+
+#ifdef BOOST_MSVC
+#   pragma warning(pop)
+#endif
 
 #endif
