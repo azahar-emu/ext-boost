@@ -17,14 +17,14 @@ namespace boost {
 namespace urls {
 namespace grammar {
 
-template<class R>
+template<BOOST_URL_CONSTRAINT(Rule) R>
 BOOST_URL_NO_INLINE
 auto
 parse(
     char const*& it,
     char const* end,
     R const& r) ->
-        result<typename R::value_type>
+        system::result<typename R::value_type>
 {
     // If this goes off, it means the rule
     // passed in did not meet the requirements.
@@ -36,13 +36,13 @@ parse(
     return r.parse(it, end);
 }
 
-template<class R>
+template<BOOST_URL_CONSTRAINT(Rule) R>
 BOOST_URL_NO_INLINE
 auto
 parse(
-    string_view s,
+    core::string_view s,
     R const& r) ->
-        result<typename R::value_type>
+        system::result<typename R::value_type>
 {
     // If this goes off, it means the rule
     // passed in did not meet the requirements.

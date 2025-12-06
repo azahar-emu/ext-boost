@@ -12,7 +12,7 @@
 
 #include <boost/url/detail/config.hpp>
 #include <boost/url/error_types.hpp>
-#include <boost/url/string_view.hpp>
+#include <boost/core/detail/string_view.hpp>
 #include <cstdlib>
 
 namespace boost {
@@ -28,24 +28,19 @@ namespace grammar {
 
     @par Value Type
     @code
-    using value_type = string_view;
+    using value_type = core::string_view;
     @endcode
 
     @par Example
     Rules are used with the function @ref parse.
     @code
-    result< string_view > rv = parse( "HTTP", literal_rule( "HTTP" ) );
+    system::result< core::string_view > rv = parse( "HTTP", literal_rule( "HTTP" ) );
     @endcode
 
     @see
         @ref delim_rule,
         @ref parse.
 */
-#ifdef BOOST_URL_DOCS
-constexpr
-__implementation_defined__
-literal_rule( char const* s );
-#else
 class literal_rule
 {
     char const* s_ = nullptr;
@@ -62,7 +57,7 @@ class literal_rule
     }
 
 public:
-    using value_type = string_view;
+    using value_type = core::string_view;
 
     constexpr
     explicit
@@ -74,12 +69,11 @@ public:
     }
 
     BOOST_URL_DECL
-    result<value_type>
+    system::result<value_type>
     parse(
         char const*& it,
         char const* end) const noexcept;
 };
-#endif
 
 } // grammar
 } // urls

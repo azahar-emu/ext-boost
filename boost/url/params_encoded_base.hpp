@@ -35,7 +35,7 @@ namespace urls {
     @li @ref params_encoded_ref
     @li @ref params_encoded_view
 */
-class params_encoded_base
+class BOOST_URL_DECL params_encoded_base
 {
     friend class url_view_base;
     friend class params_encoded_ref;
@@ -74,11 +74,7 @@ public:
         it is no longer referenced by any
         container or iterator.
     */
-#ifdef BOOST_URL_DOCS
-    using iterator = __see_below__;
-#else
     class iterator;
-#endif
 
     /// @copydoc iterator
     using const_iterator = iterator;
@@ -134,6 +130,8 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return The maximum number of characters possible.
     */
     static
     constexpr
@@ -172,8 +170,10 @@ public:
         @par Specification
         @li <a href="https://en.wikipedia.org/wiki/Query_string"
             >Query string (Wikipedia)</a>
+
+        @return The query string.
+
     */
-    BOOST_URL_DECL
     pct_string_view
     buffer() const noexcept;
 
@@ -189,8 +189,9 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return `true` if there are no params.
     */
-    BOOST_URL_DECL
     bool
     empty() const noexcept;
 
@@ -206,8 +207,9 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return The number of params.
     */
-    BOOST_URL_DECL
     std::size_t
     size() const noexcept;
 
@@ -218,8 +220,9 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return An iterator to the beginning.
     */
-    BOOST_URL_DECL
     iterator
     begin() const noexcept;
 
@@ -230,8 +233,9 @@ public:
 
         @par Exception Safety
         Throws nothing.
+
+        @return An iterator to the end.
     */
-    BOOST_URL_DECL
     iterator
     end() const noexcept;
 
@@ -268,6 +272,8 @@ public:
         the value @ref ignore_case is passed
         here, the comparison is
         case-insensitive.
+
+        @return `true` if a matching key exists.
     */
     bool
     contains(
@@ -305,8 +311,9 @@ public:
         the value @ref ignore_case is passed
         here, the comparison is
         case-insensitive.
+
+        @return The number of matching keys.
     */
-    BOOST_URL_DECL
     std::size_t
     count(
         pct_string_view key,
@@ -513,14 +520,12 @@ public:
         ignore_case_param ic = {}) const noexcept;
 
 private:
-    BOOST_URL_DECL
     detail::params_iter_impl
     find_impl(
         detail::params_iter_impl,
         pct_string_view,
         ignore_case_param) const noexcept;
 
-    BOOST_URL_DECL
     detail::params_iter_impl
     find_last_impl(
         detail::params_iter_impl,
@@ -542,6 +547,10 @@ private:
     @code
     return os << ps.buffer();
     @endcode
+
+    @param os The output stream to write to
+    @param qp The params to write
+    @return A reference to the output stream, for chaining
 */
 BOOST_URL_DECL
 std::ostream&

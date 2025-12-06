@@ -16,6 +16,20 @@
 namespace boost {
 namespace urls {
 namespace grammar {
+namespace implementation_defined {
+struct dec_octet_rule_t
+{
+    using value_type = unsigned char;
+
+    BOOST_URL_DECL
+    auto
+    parse(
+        char const*& it,
+        char const* end
+            ) const noexcept ->
+        system::result<value_type>;
+};
+}
 
 /** Match a decimal octet
 
@@ -31,7 +45,7 @@ namespace grammar {
     @par Example
     Rules are used with the function @ref parse.
     @code
-    result< unsigned char > rv = parse( "255", dec_octet_rule );
+    system::result< unsigned char > rv = parse( "255", dec_octet_rule );
     @endcode
 
     @par BNF
@@ -50,24 +64,7 @@ namespace grammar {
     @see
         @ref parse.
 */
-#ifdef BOOST_URL_DOCS
-constexpr __implementation_defined__ dec_octet_rule;
-#else
-struct dec_octet_rule_t
-{
-    using value_type = unsigned char;
-
-    BOOST_URL_DECL
-    auto
-    parse(
-        char const*& it,
-        char const* end
-            ) const noexcept ->
-        result<value_type>;
-};
-
-constexpr dec_octet_rule_t dec_octet_rule{};
-#endif
+constexpr implementation_defined::dec_octet_rule_t dec_octet_rule{};
 
 } // grammar
 } // urls

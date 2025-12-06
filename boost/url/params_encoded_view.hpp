@@ -15,12 +15,16 @@
 #include <boost/url/error_types.hpp>
 #include <boost/url/params_encoded_base.hpp>
 #include <boost/url/params_view.hpp>
-#include <boost/url/string_view.hpp>
+#include <boost/core/detail/string_view.hpp>
 #include <iosfwd>
 #include <utility>
 
 namespace boost {
 namespace urls {
+
+namespace implementation_defined {
+    struct query_rule_t;
+}
 
 /** A view representing query parameters in a URL
 
@@ -51,13 +55,13 @@ namespace urls {
     Changes to the underlying character buffer
     can invalidate iterators which reference it.
 */
-class params_encoded_view
+class BOOST_URL_DECL params_encoded_view
     : public params_encoded_base
 {
     friend class url_view_base;
     friend class params_view;
     friend class params_encoded_ref;
-    friend struct query_rule_t;
+    friend struct implementation_defined::query_rule_t;
 
     params_encoded_view(
         detail::query_ref const& ref) noexcept;
@@ -106,6 +110,8 @@ public:
 
         @par Exception Safety
         Throws nothing
+
+        @param other The object to copy
     */
     params_encoded_view(
         params_encoded_view const& other) = default;
@@ -162,9 +168,8 @@ public:
         @li <a href="https://datatracker.ietf.org/doc/html/rfc3986#section-3.4"
             >3.4.  Query</a>
     */
-    BOOST_URL_DECL
     params_encoded_view(
-        string_view s);
+        core::string_view s);
 
     /** Assignment
 
@@ -187,10 +192,13 @@ public:
 
         @par Exception Safety
         Throws nothing
+
+        @param other The object to assign
+        @return `*this`
     */
     params_encoded_view&
     operator=(
-        params_encoded_view const&) = default;
+        params_encoded_view const& other) = default;
 
     /** Conversion
 
@@ -220,17 +228,18 @@ public:
 
         @par Exception Safety
         Throws nothing
+
+        @return A new view with percent escapes decoded.
     */
-    BOOST_URL_DECL
     operator
     params_view() const noexcept;
 
     //--------------------------------------------
 
-    BOOST_URL_DECL
     friend
-        result<params_encoded_view>
-        parse_query(string_view s) noexcept;
+    BOOST_URL_DECL
+    system::result<params_encoded_view>
+    parse_query(core::string_view s) noexcept;
 };
 
 } // urls

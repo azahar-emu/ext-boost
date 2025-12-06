@@ -18,16 +18,15 @@
 #include <boost/assert/source_location.hpp>
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
-#include <boost/cstdint.hpp>
 #include <cstddef>
 #include <type_traits>
 #include <exception>
-#include <initializer_list>
 #include <utility>
-#include <functional> // std::hash
+#include <typeindex> // std::hash
 #include <iosfwd>
 #include <cstdint>
 #include <cerrno>
+#include <limits>
 
 //
 
@@ -85,7 +84,7 @@ struct monostate
 {
 };
 
-#if !BOOST_WORKAROUND(BOOST_MSVC, < 1940)
+#if !BOOST_WORKAROUND(BOOST_MSVC, < 1950)
 
 constexpr bool operator<(monostate, monostate) noexcept { return false; }
 constexpr bool operator>(monostate, monostate) noexcept { return false; }
@@ -691,8 +690,11 @@ template<class T1, class... T> union variant_storage_impl<mp11::mp_true, T1, T..
 # pragma GCC diagnostic push
 // False positive in at least GCC 7 and GCC 10 ASAN triggered by monostate (via result<void>)
 # pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#if __GNUC__ >= 12
+// False positive in at least GCC 12 and GCC 13 ASAN and -Og triggered by monostate (via result<void>)
+# pragma GCC diagnostic ignored "-Wuninitialized"
 #endif
-
+#endif
         *this = variant_storage_impl( mp11::mp_size_t<I>(), std::forward<A>(a)... );
 
 #if defined(BOOST_GCC) && (__GNUC__ >= 7)
@@ -844,6 +846,26 @@ template<class U, class... T> using resolve_overload_type = typename decltype( o
 
 template<class U, class... T> using resolve_overload_index = mp11::mp_find<mp11::mp_list<T...>, resolve_overload_type<U, T...>>;
 
+// index_type
+
+template<std::size_t N> using get_smallest_unsigned_type = mp11::mp_cond<
+
+    mp11::mp_bool< N <= (std::numeric_limits<unsigned char>::max)() >, unsigned char,
+    mp11::mp_bool< N <= (std::numeric_limits<unsigned short>::max)() >, unsigned short,
+    mp11::mp_true, unsigned
+
+>;
+
+#if BOOST_WORKAROUND( BOOST_CLANG_VERSION, < 30800 )
+
+template<bool Double, class... T> using get_index_type = unsigned short;
+
+#else
+
+template<bool Double, class... T> using get_index_type = get_smallest_unsigned_type< (Double + 1) * sizeof...(T) >;
+
+#endif
+
 // variant_base
 
 template<bool is_trivially_destructible, bool is_single_buffered, class... T> struct variant_base_impl;
@@ -854,8 +876,10 @@ struct none {};
 // trivially destructible, single buffered
 template<class... T> struct variant_base_impl<true, true, T...>
 {
+    using index_type = get_index_type<false, T...>;
+
     variant_storage<none, T...> st_;
-    unsigned ix_;
+    index_type ix_;
 
     constexpr variant_base_impl(): st_( mp11::mp_size_t<0>() ), ix_( 0 )
     {
@@ -869,6 +893,8 @@ template<class... T> struct variant_base_impl<true, true, T...>
     template<class I, class... A> void _replace( I, A&&... a )
     {
         ::new( &st_ ) variant_storage<none, T...>( mp11::mp_size_t<I::value + 1>(), std::forward<A>(a)... );
+
+        static_assert( I::value + 1 <= (std::numeric_limits<index_type>::max)(), "" );
         ix_ = I::value + 1;
     }
 
@@ -879,7 +905,7 @@ template<class... T> struct variant_base_impl<true, true, T...>
 
     template<std::size_t I> BOOST_CXX14_CONSTEXPR mp11::mp_at_c<variant<T...>, I>& _get_impl( mp11::mp_size_t<I> ) noexcept
     {
-        size_t const J = I+1;
+        std::size_t const J = I+1;
 
         BOOST_ASSERT( ix_ == J );
 
@@ -888,7 +914,7 @@ template<class... T> struct variant_base_impl<true, true, T...>
 
     template<std::size_t I> constexpr mp11::mp_at_c<variant<T...>, I> const& _get_impl( mp11::mp_size_t<I> ) const noexcept
     {
-        // size_t const J = I+1;
+        // std::size_t const J = I+1;
 
         BOOST_VARIANT2_CX14_ASSERT( ix_ == I+1 )
 
@@ -900,6 +926,8 @@ template<class... T> struct variant_base_impl<true, true, T...>
         static_assert( std::is_nothrow_constructible<U, A&&...>::value, "Logic error: U must be nothrow constructible from A&&..." );
 
         st_.emplace( mp11::mp_size_t<J>(), std::forward<A>(a)... );
+
+        static_assert( J <= (std::numeric_limits<index_type>::max)(), "" );
         ix_ = J;
     }
 
@@ -910,6 +938,8 @@ template<class... T> struct variant_base_impl<true, true, T...>
         U tmp( std::forward<A>(a)... );
 
         st_.emplace( mp11::mp_size_t<J>(), std::move(tmp) );
+
+        static_assert( J <= (std::numeric_limits<index_type>::max)(), "" );
         ix_ = J;
     }
 
@@ -920,13 +950,20 @@ template<class... T> struct variant_base_impl<true, true, T...>
 
         this->emplace_impl<J, U>( std::is_nothrow_constructible<U, A&&...>(), std::forward<A>(a)... );
     }
+
+    static constexpr bool uses_double_storage() noexcept
+    {
+        return false;
+    }
 };
 
 // trivially destructible, double buffered
 template<class... T> struct variant_base_impl<true, false, T...>
 {
+    using index_type = get_index_type<true, T...>;
+
     variant_storage<none, T...> st_[ 2 ];
-    unsigned ix_;
+    index_type ix_;
 
     constexpr variant_base_impl(): st_{ { mp11::mp_size_t<0>() }, { mp11::mp_size_t<0>() } }, ix_( 0 )
     {
@@ -940,6 +977,8 @@ template<class... T> struct variant_base_impl<true, false, T...>
     template<class I, class... A> void _replace( I, A&&... a )
     {
         ::new( &st_[ 0 ] ) variant_storage<none, T...>( mp11::mp_size_t<I::value + 1>(), std::forward<A>(a)... );
+
+        static_assert( ( I::value + 1 ) * 2 <= (std::numeric_limits<index_type>::max)(), "" );
         ix_ = ( I::value + 1 ) * 2;
     }
 
@@ -952,7 +991,7 @@ template<class... T> struct variant_base_impl<true, false, T...>
     {
         BOOST_ASSERT( index() == I );
 
-        size_t const J = I+1;
+        std::size_t const J = I+1;
 
         constexpr mp11::mp_size_t<J> j{};
         return st_[ ix_ & 1 ].get( j );
@@ -962,7 +1001,7 @@ template<class... T> struct variant_base_impl<true, false, T...>
     {
         BOOST_VARIANT2_CX14_ASSERT( index() == I )
 
-        // size_t const J = I+1;
+        // std::size_t const J = I+1;
         // constexpr mp_size_t<J> j{};
 
         return st_[ ix_ & 1 ].get( mp11::mp_size_t<I+1>() );
@@ -970,21 +1009,29 @@ template<class... T> struct variant_base_impl<true, false, T...>
 
     template<std::size_t I, class... A> BOOST_CXX14_CONSTEXPR void emplace( A&&... a )
     {
-        size_t const J = I+1;
+        std::size_t const J = I+1;
 
         unsigned i2 = 1 - ( ix_ & 1 );
 
         st_[ i2 ].emplace( mp11::mp_size_t<J>(), std::forward<A>(a)... );
 
-        ix_ = J * 2 + i2;
+        static_assert( J * 2 + 1 <= (std::numeric_limits<index_type>::max)(), "" );
+        ix_ = static_cast<index_type>( J * 2 + i2 );
+    }
+
+    static constexpr bool uses_double_storage() noexcept
+    {
+        return true;
     }
 };
 
 // not trivially destructible, single buffered
 template<class... T> struct variant_base_impl<false, true, T...>
 {
+    using index_type = get_index_type<false, T...>;
+
     variant_storage<none, T...> st_;
-    unsigned ix_;
+    index_type ix_;
 
     constexpr variant_base_impl(): st_( mp11::mp_size_t<0>() ), ix_( 0 )
     {
@@ -998,6 +1045,8 @@ template<class... T> struct variant_base_impl<false, true, T...>
     template<class I, class... A> void _replace( I, A&&... a )
     {
         ::new( &st_ ) variant_storage<none, T...>( mp11::mp_size_t<I::value + 1>(), std::forward<A>(a)... );
+
+        static_assert( I::value + 1 <= (std::numeric_limits<index_type>::max)(), "" );
         ix_ = I::value + 1;
     }
 
@@ -1037,7 +1086,7 @@ template<class... T> struct variant_base_impl<false, true, T...>
 
     template<std::size_t I> BOOST_CXX14_CONSTEXPR mp11::mp_at_c<variant<T...>, I>& _get_impl( mp11::mp_size_t<I> ) noexcept
     {
-        size_t const J = I+1;
+        std::size_t const J = I+1;
 
         BOOST_ASSERT( ix_ == J );
 
@@ -1046,7 +1095,7 @@ template<class... T> struct variant_base_impl<false, true, T...>
 
     template<std::size_t I> constexpr mp11::mp_at_c<variant<T...>, I> const& _get_impl( mp11::mp_size_t<I> ) const noexcept
     {
-        // size_t const J = I+1;
+        // std::size_t const J = I+1;
 
         BOOST_VARIANT2_CX14_ASSERT( ix_ == I+1 )
 
@@ -1055,7 +1104,7 @@ template<class... T> struct variant_base_impl<false, true, T...>
 
     template<std::size_t I, class... A> void emplace( A&&... a )
     {
-        size_t const J = I+1;
+        std::size_t const J = I+1;
 
         using U = mp11::mp_at_c<variant<T...>, I>;
 
@@ -1066,19 +1115,28 @@ template<class... T> struct variant_base_impl<false, true, T...>
         _destroy();
 
         st_.emplace( mp11::mp_size_t<J>(), std::move(tmp) );
+
+        static_assert( J <= (std::numeric_limits<index_type>::max)(), "" );
         ix_ = J;
+    }
+
+    static constexpr bool uses_double_storage() noexcept
+    {
+        return false;
     }
 };
 
 // not trivially destructible, double buffered
 template<class... T> struct variant_base_impl<false, false, T...>
 {
+    using index_type = get_index_type<true, T...>;
+
 #if defined(__GNUC__) && __GNUC__ < 11 && !defined(__clang__) && !defined(__INTEL_COMPILER)
 
     // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63707 :-(
 
     variant_storage<none, T...> st1_, st2_;
-    unsigned ix_;
+    index_type ix_;
 
     constexpr variant_base_impl(): st1_( mp11::mp_size_t<0>() ), st2_( mp11::mp_size_t<0>() ), ix_( 0 )
     {
@@ -1101,7 +1159,7 @@ template<class... T> struct variant_base_impl<false, false, T...>
 #else
 
     variant_storage<none, T...> st_[ 2 ];
-    unsigned ix_;
+    index_type ix_;
 
     constexpr variant_base_impl(): st_{ { mp11::mp_size_t<0>() }, { mp11::mp_size_t<0>() } }, ix_( 0 )
     {
@@ -1127,6 +1185,8 @@ template<class... T> struct variant_base_impl<false, false, T...>
     template<class I, class... A> void _replace( I, A&&... a )
     {
         ::new( &storage( 0 ) ) variant_storage<none, T...>( mp11::mp_size_t<I::value + 1>(), std::forward<A>(a)... );
+
+        static_assert( ( I::value + 1 ) * 2 <= (std::numeric_limits<index_type>::max)(), "" );
         ix_ = ( I::value + 1 ) * 2;
     }
 
@@ -1149,7 +1209,7 @@ template<class... T> struct variant_base_impl<false, false, T...>
 
     void _destroy() noexcept
     {
-        mp11::mp_with_index<1 + sizeof...(T)>( ix_ / 2, _destroy_L1{ this, ix_ & 1 } );
+        mp11::mp_with_index<1 + sizeof...(T)>( ix_ / 2, _destroy_L1{ this, static_cast<unsigned>( ix_ & 1 ) } );
     }
 
     ~variant_base_impl() noexcept
@@ -1166,7 +1226,7 @@ template<class... T> struct variant_base_impl<false, false, T...>
     {
         BOOST_ASSERT( index() == I );
 
-        size_t const J = I+1;
+        std::size_t const J = I+1;
 
         constexpr mp11::mp_size_t<J> j{};
         return storage( ix_ & 1 ).get( j );
@@ -1176,7 +1236,7 @@ template<class... T> struct variant_base_impl<false, false, T...>
     {
         BOOST_VARIANT2_CX14_ASSERT( index() == I )
 
-        // size_t const J = I+1;
+        // std::size_t const J = I+1;
         // constexpr mp_size_t<J> j{};
 
         return storage( ix_ & 1 ).get( mp11::mp_size_t<I+1>() );
@@ -1184,14 +1244,20 @@ template<class... T> struct variant_base_impl<false, false, T...>
 
     template<std::size_t I, class... A> void emplace( A&&... a )
     {
-        size_t const J = I+1;
+        std::size_t const J = I+1;
 
         unsigned i2 = 1 - ( ix_ & 1 );
 
         storage( i2 ).emplace( mp11::mp_size_t<J>(), std::forward<A>(a)... );
         _destroy();
 
-        ix_ = J * 2 + i2;
+        static_assert( J * 2 + 1 <= (std::numeric_limits<index_type>::max)(), "" );
+        ix_ = static_cast<index_type>( J * 2 + i2 );
+    }
+
+    static constexpr bool uses_double_storage() noexcept
+    {
+        return true;
     }
 };
 
@@ -1613,7 +1679,17 @@ public:
     template<class U,
         class Ud = typename std::decay<U>::type,
         class E1 = typename std::enable_if< !std::is_same<Ud, variant>::value && !std::is_base_of<variant, Ud>::value && !detail::is_in_place_index<Ud>::value && !detail::is_in_place_type<Ud>::value >::type,
+
+#if BOOST_WORKAROUND(BOOST_MSVC, < 1950)
+
+        class V = mp11::mp_apply_q< mp11::mp_bind_front<detail::resolve_overload_type, U&&>, variant >,
+
+#else
+
         class V = detail::resolve_overload_type<U&&, T...>,
+
+#endif
+
         class E2 = typename std::enable_if<std::is_constructible<V, U&&>::value>::type
         >
     constexpr variant( U&& u )
@@ -1702,6 +1778,8 @@ public:
     }
 
     using variant_base::index;
+
+    using variant_base::uses_double_storage;
 
     // swap
 
@@ -2092,7 +2170,7 @@ template<class R, class F, class V1> struct visit_L1
     F&& f;
     V1&& v1;
 
-    template<class I> auto operator()( I ) const -> Vret<R, F, V1>
+    template<class I> constexpr auto operator()( I ) const -> Vret<R, F, V1>
     {
         return std::forward<F>(f)( unsafe_get<I::value>( std::forward<V1>(v1) ) );
     }
@@ -2297,8 +2375,8 @@ namespace detail
 
 inline std::size_t hash_value_impl_( mp11::mp_true, std::size_t index, std::size_t value )
 {
-    boost::ulong_long_type hv = ( boost::ulong_long_type( 0xCBF29CE4 ) << 32 ) + 0x84222325;
-    boost::ulong_long_type const prime = ( boost::ulong_long_type( 0x00000100 ) << 32 ) + 0x000001B3;
+    unsigned long long hv = 0xCBF29CE484222325ull;
+    unsigned long long const prime = 0x100000001B3ull;
 
     hv ^= index;
     hv *= prime;
@@ -2475,16 +2553,16 @@ template<class V> struct tag_invoke_L2
     boost::json::value const& v;
     typename boost::json::result_for<V, boost::json::value>::type& r;
 
-    template<class I> void operator()( I i ) const
+    template<class I> void operator()( I /*i*/ ) const
     {
         if( !r )
         {
-            using Ti = mp11::mp_at_c<V, i>;
+            using Ti = mp11::mp_at_c<V, I::value>;
             auto r2 = boost::json::try_value_to<Ti>( v );
 
             if( r2 )
             {
-                r.emplace( in_place_index_t<i>{}, std::move( *r2 ) );
+                r.emplace( in_place_index_t<I::value>{}, std::move( *r2 ) );
             }
         }
     }

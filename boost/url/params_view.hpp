@@ -99,6 +99,8 @@ public:
 
         @par Exception Safety
         Throws nothing
+
+        @param other The object to copy
     */
     params_view(
         params_view const& other) = default;
@@ -126,6 +128,9 @@ public:
 
         @par Exception Safety
         Throws nothing
+
+        @param other The object to copy
+        @param opt The options for decoding
     */
     params_view(
         params_view const& other,
@@ -184,7 +189,7 @@ public:
     */
     BOOST_URL_DECL
     params_view(
-        string_view s);
+        core::string_view s);
 
     /** Constructor
 
@@ -251,7 +256,7 @@ public:
     */
     BOOST_URL_DECL
     params_view(
-        string_view s,
+        core::string_view s,
         encoding_opts opt);
 
     /** Assignment
@@ -274,10 +279,13 @@ public:
 
         @par Exception Safety
         Throws nothing
+
+        @param other The object to assign
+        @return A reference to this object
     */
     params_view&
     operator=(
-        params_view const&) = default;
+        params_view const& other) = default;
 };
 
 } // urls

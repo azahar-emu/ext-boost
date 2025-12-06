@@ -17,6 +17,21 @@
 namespace boost {
 namespace urls {
 
+namespace implementation_defined {
+struct absolute_uri_rule_t
+{
+    using value_type = url_view;
+
+    BOOST_URL_DECL
+    auto
+    parse(
+        char const*& it,
+        char const* end
+            ) const noexcept ->
+        system::result<value_type>;
+};
+} // implementation_defined
+
 /** Rule for absolute-URI
 
     @par Value Type
@@ -27,7 +42,7 @@ namespace urls {
     @par Example
     Rules are used with the function @ref grammar::parse.
     @code
-    result< url_view > rv = grammar::parse( "http://example.com/index.htm?id=1", absolute_uri_rule );
+    system::result< url_view > rv = grammar::parse( "http://example.com/index.htm?id=1", absolute_uri_rule );
     @endcode
 
     @par BNF
@@ -49,24 +64,7 @@ namespace urls {
         @ref parse_absolute_uri,
         @ref url_view.
 */
-#ifdef BOOST_URL_DOCS
-constexpr __implementation_defined__ absolute_uri_rule;
-#else
-struct absolute_uri_rule_t
-{
-    using value_type = url_view;
-
-    BOOST_URL_DECL
-    auto
-    parse(
-        char const*& it,
-        char const* end
-            ) const noexcept ->
-        result<value_type>;
-};
-
-constexpr absolute_uri_rule_t absolute_uri_rule{};
-#endif
+BOOST_INLINE_CONSTEXPR implementation_defined::absolute_uri_rule_t absolute_uri_rule{};
 
 } // urls
 } // boost

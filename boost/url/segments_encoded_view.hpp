@@ -15,7 +15,7 @@
 #include <boost/url/error_types.hpp>
 #include <boost/url/segments_encoded_base.hpp>
 #include <boost/url/segments_view.hpp>
-#include <boost/url/string_view.hpp>
+#include <boost/core/detail/string_view.hpp>
 #include <iosfwd>
 #include <utility>
 
@@ -165,7 +165,7 @@ public:
     */
     BOOST_URL_DECL
     segments_encoded_view(
-        string_view s);
+        core::string_view s);
 
     /** Assignment
 
@@ -188,10 +188,13 @@ public:
 
         @par Exception Safety
         Throws nothing
+
+        @param other The segments to copy.
+        @return Reference to this object
     */
     segments_encoded_view&
     operator=(
-        segments_encoded_view const&) = default;
+        segments_encoded_view const& other) = default;
 
     /** Conversion
 
@@ -221,6 +224,8 @@ public:
 
         @par Exception Safety
         Throws nothing
+
+        @return A view of the segments.
     */
     BOOST_URL_DECL
     operator
@@ -230,8 +235,8 @@ public:
 
     BOOST_URL_DECL
     friend
-        result<segments_encoded_view>
-        parse_path(string_view s) noexcept;
+    system::result<segments_encoded_view>
+    parse_path(core::string_view s) noexcept;
 };
 
 } // urls

@@ -16,6 +16,21 @@
 
 namespace boost {
 namespace urls {
+namespace implementation_defined {
+struct ipv4_address_rule_t
+{
+    using value_type =
+        ipv4_address;
+
+    BOOST_URL_DECL
+    auto
+    parse(
+        char const*& it,
+        char const* end
+            ) const noexcept ->
+        system::result<ipv4_address>;
+};
+} // implementation_defined
 
 /** Rule for an IP version 4 style address
 
@@ -27,7 +42,7 @@ namespace urls {
     @par Example
     Rules are used with the function @ref grammar::parse.
     @code
-    result< ipv4_address > rv = grammar::parse( "192.168.0.1", ipv4_address_rule );
+    system::result< ipv4_address > rv = grammar::parse( "192.168.0.1", ipv4_address_rule );
     @endcode
 
     @par BNF
@@ -52,25 +67,7 @@ namespace urls {
         @ref parse_ipv4_address,
         @ref grammar::parse.
 */
-#ifdef BOOST_URL_DOCS
-constexpr __implementation_defined__ ipv4_address_rule;
-#else
-struct ipv4_address_rule_t
-{
-    using value_type =
-        ipv4_address;
-
-    BOOST_URL_DECL
-    auto
-    parse(
-        char const*& it,
-        char const* end
-            ) const noexcept ->
-        result<ipv4_address>;
-};
-
-constexpr ipv4_address_rule_t ipv4_address_rule{};
-#endif
+constexpr implementation_defined::ipv4_address_rule_t ipv4_address_rule{};
 
 } // urls
 } // boost

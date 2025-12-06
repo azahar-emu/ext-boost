@@ -13,7 +13,7 @@
 
 #include <boost/url/detail/config.hpp>
 #include <boost/url/segments_base.hpp>
-#include <boost/url/string_view.hpp>
+#include <boost/core/detail/string_view.hpp>
 
 namespace boost {
 namespace urls {
@@ -107,6 +107,8 @@ public:
 
         @par Exception Safety
         Throws nothing
+
+        @param other The other view.
     */
     segments_view(
         segments_view const& other) = default;
@@ -161,7 +163,7 @@ public:
     */
     BOOST_URL_DECL
     segments_view(
-        string_view s);
+        core::string_view s);
 
     /** Assignment
 
@@ -184,6 +186,9 @@ public:
 
         @par Exception Safety
         Throws nothing
+
+        @param other The other view.
+        @return A reference to this object.
     */
     segments_view&
     operator=(segments_view const& other) = default;
