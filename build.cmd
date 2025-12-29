@@ -37,4 +37,6 @@ bcp ^
     boost/serialization/weak_ptr.hpp ^
     boost/iostreams/ ^
     boost/url/ ^
+    boost/uuid/uuid_generators.hpp ^
+    boost/uuid/uuid_io.hpp ^
     --boost="%1" .
