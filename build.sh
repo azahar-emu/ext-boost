@@ -7,6 +7,7 @@ bcp \
     boost/container/static_vector.hpp \
     boost/crc.hpp \
     boost/date_time/posix_time/posix_time.hpp \
+    boost/hana/string.hpp \
     boost/icl/interval_map.hpp \
     boost/locale/encoding_utf.hpp \
     boost/optional.hpp \
